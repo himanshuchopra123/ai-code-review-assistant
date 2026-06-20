@@ -20,16 +20,21 @@ export default function Home() {
               comments on every pull request, before it merges.
             </p>
           </div>
-          <Link
-            href="/repos"
+          <a
+            href="https://github.com/apps/ai-reviewer-dev-himanshu/installations/new"
             className="flex w-full items-center justify-center gap-2 rounded-full bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             <GitHubIcon />
-            Sign in with GitHub
+            Install on GitHub
+          </a>
+          <Link
+            href="/dashboard"
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+          >
+            Go to Dashboard →
           </Link>
           <p className="text-xs text-zinc-400">
-            You&apos;ll be asked to install the GitHub App and choose
-            repositories.
+            Install the GitHub App on your repos — the bot reviews every PR automatically.
           </p>
         </div>
       </Card>
