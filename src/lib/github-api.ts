@@ -70,13 +70,15 @@ export async function postPRReview(
   repo: string,
   pullNumber: number,
   commitSha: string,
-  findings: LLMFinding[]
+  findings: LLMFinding[],
+  summary?: string
 ): Promise<PostedReview> {
   const isClean = findings.length === 0;
+  const summaryBlock = summary ? `\n\n**Summary:** ${summary}` : "";
 
   const body = isClean
-    ? "**✅ AI Review — Looks good!**\n\nNo issues found in this change."
-    : `**AI Review — ${findings.length} issue${findings.length > 1 ? "s" : ""} found**`;
+    ? `**✅ AI Review — Looks good!**${summaryBlock}\n\nNo issues found in this change.`
+    : `**AI Review — ${findings.length} issue${findings.length > 1 ? "s" : ""} found**${summaryBlock}`;
 
   const comments = findings.map((f) => ({
     path: f.filePath,

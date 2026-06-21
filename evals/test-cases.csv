@@ -1,0 +1,719 @@
+ID,Category,Expected Severity,Description,Should Find Bug,Expected Keywords,Diff
+sec-001,security,critical,SQL injection via string concatenation,true,injection; SQL; parameterized,"### api/users.py
+```diff
+@@ -12,2 +12,3 @@
+     conn = db.connect()
++    result = conn.execute(""SELECT * FROM users WHERE id = "" + user_id)
+     return result
+```"
+sec-002,security,critical,Hardcoded API secret in source code,true,hardcoded; secret; environment,"### config/settings.py
+```diff
+@@ -5,2 +5,3 @@
+     DEBUG = False
++    STRIPE_SECRET_KEY = ""sk_live_FAKE_KEY_FOR_TESTING_ONLY""
+```"
+sec-003,security,critical,XSS vulnerability via innerHTML,true,XSS; innerHTML; sanitize,"### components/Comment.tsx
+```diff
+@@ -8,2 +8,3 @@
+   return (
++    <div dangerouslySetInnerHTML={{ __html: body }} />
+   );
+```"
+sec-004,security,critical,Missing auth check on admin endpoint,true,auth; unauthorized; middleware,"### routes/admin.js
+```diff
+@@ -1,5 +1,8 @@
+ const router = express.Router();
++router.delete('/users/:id', async (req, res) => {
++  await User.findByIdAndDelete(req.params.id);
++  res.json({ deleted: true });
++});
+```"
+sec-005,security,critical,Storing password in plain text,true,plain; hash; bcrypt; password,"### models/user.py
+```diff
+@@ -15,2 +15,3 @@
+     def set_password(self, password):
+-        self.password_hash = bcrypt.hash(password)
++        self.password = password
+```"
+sec-006,security,critical,Eval of user-controlled input,true,eval; injection; arbitrary,"### utils/calculator.py
+```diff
+@@ -3,2 +3,3 @@
++    result = eval(expression)
+     return result
+```"
+sec-007,security,critical,Path traversal in file download,true,traversal; path; sanitize,"### routes/files.js
+```diff
+@@ -4,3 +4,5 @@
++  const filename = req.query.file;
++  res.sendFile('/uploads/' + filename);
+```"
+sec-008,security,major,JWT token with no expiration,true,expir; JWT; token,"### auth/token.js
+```diff
+@@ -5,3 +5,4 @@
++  return jwt.sign({ userId: user.id, role: user.role }, SECRET_KEY);
+```"
+sec-009,security,critical,CORS allowing all origins with credentials,true,CORS; origin; wildcard,"### server.js
+```diff
+@@ -8,2 +8,5 @@
++app.use(cors({
++  origin: '*',
++  credentials: true
++}));
+```"
+sec-010,security,critical,Deserializing untrusted YAML,true,yaml; unsafe; safe_load,"### config/loader.py
+```diff
+@@ -6,2 +6,3 @@
++    config = yaml.load(raw_input)
++    return config
+```"
+sec-011,security,major,Logging sensitive user data,true,log; sensitive; password,"### services/auth.py
+```diff
+@@ -10,2 +10,3 @@
+     user = find_user(username)
++    logger.info(f""Login attempt: user={username}, password={password}"")
+```"
+sec-012,security,major,Weak hash algorithm MD5,true,MD5; weak; SHA,"### utils/hash.py
+```diff
+@@ -3,2 +3,3 @@
++    return hashlib.md5(token.encode()).hexdigest()
+```"
+sec-013,security,critical,Command injection via os.system,true,command; injection; subprocess,"### utils/deploy.py
+```diff
+@@ -5,2 +5,3 @@
++    os.system(f""git checkout {branch} && ./deploy.sh"")
+```"
+sec-014,security,major,SSRF via user-controlled URL,true,SSRF; URL; whitelist,"### api/proxy.py
+```diff
+@@ -4,3 +4,5 @@
++    url = request.args.get('url')
++    response = requests.get(url)
++    return response.content
+```"
+sec-015,security,major,Exposing stack trace in error response,true,stack; trace; error,"### middleware/error.js
+```diff
+@@ -3,4 +3,5 @@
++  res.status(500).json({ error: err.message, stack: err.stack });
+```"
+crit-001,bug,critical,Null dereference on optional user,true,null; undefined; optional,"### services/profile.ts
+```diff
+@@ -8,2 +8,4 @@
+     const user = await db.users.findById(userId);
++    const name = user.name.toUpperCase();
++    return { name, email: user.email };
+```"
+crit-002,bug,critical,Infinite loop with no exit condition,true,infinite; loop; break,"### workers/processor.py
+```diff
+@@ -10,3 +10,5 @@
++    while True:
++        item = queue.get()
++        process(item)
+```"
+crit-003,bug,critical,Deleting all records instead of filtered,true,delete; all; filter; where,"### api/cleanup.py
+```diff
+@@ -5,3 +5,3 @@
+-    db.sessions.delete_many({""expired_at"": {""$lt"": now}})
++    db.sessions.delete_many({})
+```"
+crit-004,bug,critical,Off-by-one in boundary check,true,off-by-one; boundary; >=,"### billing/invoice.py
+```diff
+@@ -20,3 +20,3 @@
+-        if items[i].quantity >= min_quantity:
++        if items[i].quantity > min_quantity:
+             items[i].price *= discount_rate
+```"
+crit-005,bug,critical,Writing to wrong variable — result lost,true,wrong variable; overwrite; lost,"### services/order.py
+```diff
+@@ -14,3 +14,4 @@
+     subtotal = sum(item.price * item.qty for item in order.items)
+     tax = subtotal * TAX_RATE
++    subtotal = subtotal - order.discount
+     return tax + subtotal
+```"
+crit-006,bug,critical,Swapped arguments in function call,true,swap; argument; order,"### services/transfer.py
+```diff
+@@ -8,3 +8,3 @@
+-    ledger.record(from_account, to_account, amount)
++    ledger.record(to_account, from_account, amount)
+```"
+crit-007,bug,critical,Division by zero on empty list,true,division; zero; empty,"### analytics/stats.py
+```diff
+@@ -5,2 +5,3 @@
++    total = sum(scores)
++    return total / len(scores)
+```"
+crit-008,bug,critical,Unclosed file handle leaks resources,true,close; file; leak; with,"### utils/export.py
+```diff
+@@ -3,3 +3,5 @@
++    f = open('output.csv', 'w')
++    for r in records:
++        f.write(r.to_csv())
+```"
+crit-009,bug,critical,Silently swallowing all exceptions,true,swallow; except; silent; broad,"### services/payment.py
+```diff
+@@ -10,4 +10,6 @@
++    try:
++        gateway.charge(customer_id, amount)
++    except:
++        pass
+```"
+crit-010,bug,critical,Assignment instead of comparison,true,assignment; comparison; ==; =,"### handlers/auth.js
+```diff
+@@ -6,3 +6,4 @@
++  if (user.role = 'admin') {
++    return true;
++  }
+```"
+crit-011,bug,critical,Mutable default argument in Python,true,mutable; default; shared; list,"### utils/config.py
+```diff
+@@ -1,2 +1,3 @@
++def get_defaults(items=[]):
++    items.append('new_item')
++    return items
+```"
+crit-012,bug,critical,Race condition on shared counter,true,race; concurr; atomic; lock,"### services/inventory.go
+```diff
+@@ -15,4 +15,5 @@
++    count := stock[itemID]
++    if count > 0 {
++        stock[itemID] = count - 1
++    }
+```"
+crit-013,bug,critical,Double-close of database connection,true,double; close; connection,"### db/pool.go
+```diff
+@@ -20,4 +20,5 @@
+     conn, _ := db.Conn(ctx)
+     defer conn.Close()
++    result := conn.QueryRow(""SELECT 1"")
++    conn.Close()
+```"
+crit-014,bug,critical,Integer overflow in multiplication,true,overflow; integer; large,"### billing/calc.js
+```diff
+@@ -4,2 +4,3 @@
++  return priceDollars * 100 * quantity * 365;
+```"
+crit-015,bug,critical,Missing await on async call,true,await; async; promise; missing,"### services/email.ts
+```diff
+@@ -8,3 +8,4 @@
++  mailer.send(user.email, 'Welcome!', template);
++  logger.info('Email sent');
+```"
+maj-001,bug,major,Wrong operator — condition always true,true,always true; condition; ||; &&,"### validators/age.py
+```diff
+@@ -3,2 +3,3 @@
++    return age > 0 or age < 150
+```"
+maj-002,bug,major,Missing return in error branch,true,return; missing; fall through,"### api/handler.js
+```diff
+@@ -5,4 +5,6 @@
++  if (!req.body.email) {
++    res.status(400).json({ error: 'Email required' });
++  }
++  const user = createUser(req.body);
++  res.json(user);
+```"
+maj-003,bug,major,String compared to number without conversion,true,type; string; number; coercion,"### utils/validate.js
+```diff
+@@ -3,2 +3,3 @@
++  return formData.age > 18;
+```"
+maj-004,bug,major,Mutating array while iterating,true,mutate; iterate; remove; loop,"### utils/filter.py
+```diff
+@@ -3,3 +3,5 @@
++    for user in users:
++        if not user.is_active:
++            users.remove(user)
+```"
+maj-005,bug,major,setTimeout in critical path causes race,true,setTimeout; race; timing; order,"### services/checkout.js
+```diff
+@@ -12,3 +12,5 @@
++  setTimeout(() => {
++    updateInventory(order);
++  }, 0);
++  return { success: true };
+```"
+maj-006,bug,major,ReDoS vulnerable regex,true,regex; backtrack; ReDoS,"### validators/email.js
+```diff
+@@ -2,2 +2,3 @@
++const EMAIL_REGEX = /^([a-zA-Z0-9]+)*@([a-zA-Z0-9]+)*$/;
+```"
+maj-007,bug,major,Float equality comparison,true,float; precision; epsilon,"### billing/discount.py
+```diff
+@@ -5,2 +5,3 @@
++    final = price * (1 - discount)
++    if final == 29.99:
++        return 0
+```"
+maj-008,bug,major,Shadowing outer variable in loop,true,shadow; variable; scope,"### utils/transform.py
+```diff
+@@ -3,4 +3,5 @@
+     result = []
++    for item in data:
++        result = transform(item)
++    return result
+```"
+maj-009,bug,major,Swallowing error cause in Go,true,error; cause; wrap; context,"### services/api.go
+```diff
+@@ -10,4 +10,4 @@
+     if err != nil {
+-        return nil, fmt.Errorf(""fetch failed: %w"", err)
++        return nil, fmt.Errorf(""fetch failed"")
+     }
+```"
+maj-010,bug,major,Goroutine leak — no cancel mechanism,true,goroutine; leak; cancel; context,"### workers/monitor.go
+```diff
+@@ -5,3 +5,6 @@
++    go func() {
++        for {
++            checkHealth()
++            time.Sleep(10 * time.Second)
++        }
++    }()
+```"
+maj-011,bug,major,useEffect missing cleanup,true,unmount; cleanup; useEffect; interval,"### components/Dashboard.tsx
+```diff
+@@ -8,4 +8,6 @@
+   useEffect(() => {
++    const interval = setInterval(() => {
++      fetch('/api/stats').then(r => r.json()).then(setStats);
++    }, 5000);
+   }, []);
+```"
+maj-012,bug,major,Using == instead of === in JS,true,===; strict; equality,"### utils/check.js
+```diff
+@@ -2,2 +2,3 @@
++  if (user.role == true) {
++    return true;
++  }
+```"
+maj-013,bug,major,Wrong timezone handling,true,timezone; UTC; local,"### services/scheduler.js
+```diff
+@@ -5,2 +5,3 @@
++  return new Date().toLocaleDateString();
+```"
+maj-014,bug,major,Unhandled promise rejection,true,unhandled; promise; try; catch,"### routes/upload.js
+```diff
+@@ -5,3 +5,5 @@
++  const result = await processFile(req.file);
++  await saveToS3(result);
++  res.json({ ok: true });
+```"
+maj-015,bug,major,Using wrong map key,true,key; wrong; undefined,"### services/pricing.py
+```diff
+@@ -8,3 +8,3 @@
+     prices = fetch_prices(product)
++    return prices[""usd""]
+```"
+min-001,bug,minor,Missing default in switch,true,default; switch; unhandled,"### utils/status.ts
+```diff
+@@ -3,4 +3,7 @@
++  switch (status) {
++    case 'active': return 'Active';
++    case 'inactive': return 'Inactive';
++    case 'pending': return 'Pending';
++  }
+```"
+min-002,bug,minor,Magic numbers without constants,true,magic number; constant; named,"### services/retry.py
+```diff
+@@ -5,2 +5,3 @@
++    for i in range(7):
++        response = requests.get(url, timeout=3.5)
+```"
+min-003,bug,minor,Empty catch block hides errors,true,empty; catch; swallow,"### services/cache.ts
+```diff
+@@ -8,3 +8,5 @@
++  try {
++    return JSON.parse(localStorage.getItem(key) ?? '');
++  } catch (e) {
++  }
+```"
+min-004,bug,minor,Not trimming input before validation,true,trim; whitespace; input,"### validators/form.js
+```diff
+@@ -3,2 +3,3 @@
++  if (input.includes('@')) {
++    return true;
++  }
+```"
+min-005,bug,minor,String concatenation for URL building,true,URL; concatenat; encode,"### api/client.ts
+```diff
+@@ -5,2 +5,3 @@
++  return fetch('/api/users/' + name + '/profile');
+```"
+min-006,bug,minor,Redundant boolean comparison,true,redundant; boolean; simplify,"### utils/check.py
+```diff
+@@ -3,2 +3,3 @@
++    if feature.active == True:
++        return True
+```"
+min-007,bug,minor,Not handling empty array,true,empty; array; edge; check,"### utils/stats.js
+```diff
+@@ -3,2 +3,3 @@
++  return items[0].name;
+```"
+min-008,bug,minor,Using var instead of let/const,true,var; let; const; scope,"### utils/format.js
+```diff
+@@ -2,2 +2,3 @@
++  var fullName = first + ' ' + last;
++  return fullName.trim();
+```"
+min-009,bug,minor,console.log left in production,true,console; log; debug; remove,"### services/auth.ts
+```diff
+@@ -12,3 +12,4 @@
+     const decoded = jwt.verify(token, SECRET);
++    console.log('decoded token:', decoded);
+     return decoded;
+```"
+min-010,bug,minor,Unused imports,true,unused; import; dead,"### pages/home.tsx
+```diff
+@@ -1,3 +1,4 @@
+ import React from 'react';
++import { useState, useEffect, useCallback } from 'react';
+ export default function Home() { return <div>Hello</div>; }
+```"
+min-011,bug,minor,Inconsistent error messages,true,inconsistent; error; message,"### api/orders.py
+```diff
+@@ -8,3 +8,5 @@
++    if not data.get('items'):
++        raise ValueError('Error: items is missing!!!')
++    if not data.get('customer_id'):
++        raise ValueError('customer_id required')
+```"
+min-012,bug,minor,Sync file I/O in async handler,true,sync; async; blocking; readFileSync,"### routes/config.js
+```diff
+@@ -5,3 +5,4 @@
++  const data = fs.readFileSync('./config.json', 'utf8');
++  res.json(JSON.parse(data));
+```"
+min-013,bug,minor,Generic error message hides root cause,true,generic; error; specific,"### services/db.py
+```diff
+@@ -8,4 +8,5 @@
++    try:
++        db.insert(record)
++    except IntegrityError:
++        return {""error"": ""something went wrong""}
+```"
+min-014,bug,minor,Case-sensitive string comparison,true,case; lower; insensitive,"### validators/role.py
+```diff
+@@ -2,2 +2,3 @@
++    return user.role == ""Admin""
+```"
+min-015,bug,minor,Date without locale consideration,true,locale; date; format,"### components/Header.tsx
+```diff
+@@ -4,2 +4,3 @@
++  const date = new Date().toLocaleDateString();
+   return <h1>{date}</h1>;
+```"
+perf-001,performance,major,N+1 query inside loop,true,N+1; query; loop; batch,"### api/orders.py
+```diff
+@@ -5,3 +5,5 @@
+     orders = Order.query.all()
++    for order in orders:
++        order.customer_name = Customer.query.get(order.customer_id).name
++    return orders
+```"
+perf-002,performance,major,Loading entire table into memory,true,memory; pagination; limit; all,"### reports/export.py
+```diff
+@@ -4,2 +4,3 @@
++    all_records = Record.query.all()
++    return [r.to_dict() for r in all_records]
+```"
+perf-003,performance,minor,Inline object causes unnecessary re-renders,true,render; inline; object; memo,"### components/List.tsx
+```diff
+@@ -5,3 +5,3 @@
++    <DataTable style={{ margin: 10, padding: 5 }} data={users} />
+```"
+perf-004,performance,major,Sync crypto blocking event loop,true,sync; blocking; event loop; crypto,"### auth/hash.js
+```diff
+@@ -4,2 +4,3 @@
++  return crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512');
+```"
+perf-005,performance,minor,String concat in loop instead of join,true,concatenat; join; loop,"### utils/csv.py
+```diff
+@@ -3,3 +3,5 @@
++    output = """"
++    for row in rows:
++        output += "","".join(row) + ""\n""
++    return output
+```"
+perf-006,performance,major,Missing index on queried column,true,index; query; scan,"### migrations/003.sql
+```diff
+@@ -1,4 +1,5 @@
++CREATE TABLE orders (
++  id SERIAL PRIMARY KEY,
++  customer_email TEXT NOT NULL,
++  status TEXT NOT NULL,
++  created_at TIMESTAMP DEFAULT NOW()
++);
+```"
+perf-007,performance,minor,SELECT * when only one column needed,true,SELECT *; column; unnecessary,"### api/users.py
+```diff
+@@ -5,2 +5,3 @@
++    users = db.execute(""SELECT * FROM users WHERE active = true"")
++    return len(users)
+```"
+perf-008,performance,major,Regex recompiled on every call,true,compile; regex; reuse; cache,"### validators/input.py
+```diff
+@@ -3,3 +3,4 @@
++    pattern = re.compile(r'^\\+?[1-9]\\d{1,14}$')
++    return pattern.match(phone) is not None
+```"
+perf-009,performance,minor,Expensive Intl object created each render,true,render; Date; memo; expensive,"### components/Clock.tsx
+```diff
+@@ -3,3 +3,4 @@
++  const formatted = new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeStyle: 'long' }).format(new Date());
++  return <span>{formatted}</span>;
+```"
+perf-010,performance,major,O(n^2) nested loop instead of Set,true,O(n; nested; loop; set; map,"### utils/dedupe.py
+```diff
+@@ -3,4 +3,6 @@
++    duplicates = []
++    for a in list_a:
++        for b in list_b:
++            if a == b:
++                duplicates.append(a)
++    return duplicates
+```"
+risk-001,risky_change,major,Removing rate limiting,true,rate limit; remove; protection,"### middleware/rateLimit.js
+```diff
+@@ -5,3 +5,2 @@
+-apiRouter.use(rateLimit({ windowMs: 60000, max: 100 }));
+ apiRouter.get('/data', handler);
+```"
+risk-002,risky_change,major,Changing public API return shape,true,breaking; API; return; contract,"### api/v1/users.py
+```diff
+@@ -5,3 +5,3 @@
+-    return jsonify([u.to_dict() for u in users])
++    return jsonify({""data"": [u.to_dict() for u in users], ""count"": len(users)})
+```"
+risk-003,risky_change,major,Removing input validation,true,validation; remove; guard,"### api/submit.py
+```diff
+@@ -5,4 +5,3 @@
+-    if not validate_schema(data):
+-        raise ValidationError('Invalid input')
+     result = process(data)
+```"
+risk-004,risky_change,major,Changing DB column type,true,migration; column; type; data loss,"### migrations/005.sql
+```diff
+@@ -1,2 +1,2 @@
++ALTER TABLE payments ALTER COLUMN amount TYPE INTEGER USING amount::integer;
+```"
+risk-005,risky_change,major,Removing error boundary,true,error boundary; remove; crash,"### App.tsx
+```diff
+@@ -8,5 +8,3 @@
+-    <ErrorBoundary fallback={<ErrorPage />}>
+       <Routes />
+-    </ErrorBoundary>
+```"
+risk-006,risky_change,major,Removing transaction wrapper,true,transaction; atomic; consistency,"### services/transfer.py
+```diff
+@@ -5,5 +5,3 @@
+-    with db.transaction():
+-        debit(from_id, amount)
+-        credit(to_id, amount)
++    debit(from_id, amount)
++    credit(to_id, amount)
+```"
+risk-007,risky_change,major,Disabling SSL verification,true,SSL; verify; certificate,"### services/api_client.py
+```diff
+@@ -5,2 +5,2 @@
+-    return requests.get(url)
++    return requests.get(url, verify=False)
+```"
+risk-008,risky_change,major,Increasing batch size 100x,true,batch; size; memory,"### config/settings.py
+```diff
+@@ -8,2 +8,2 @@
+-    BATCH_SIZE = 100
++    BATCH_SIZE = 10000
+```"
+risk-009,risky_change,major,Changing timeout from 30s to 5min,true,timeout; change; long,"### config/http.js
+```diff
+@@ -3,2 +3,2 @@
+-  timeout: 30000,
++  timeout: 300000,
+```"
+risk-010,risky_change,major,Removing retry logic from payments,true,retry; remove; resilience,"### services/payment.py
+```diff
+@@ -5,5 +5,2 @@
+-    for attempt in range(3):
+-        try:
+-            return gateway.charge(customer, amount)
+-        except GatewayError:
+-            if attempt == 2: raise
++    return gateway.charge(customer, amount)
+```"
+clean-001,clean,N/A,Simple variable rename,false,,"### utils/format.py
+```diff
+@@ -3,3 +3,3 @@
+-    n = f""{first} {last}""
+-    return n.strip()
++    full_name = f""{first} {last}""
++    return full_name.strip()
+```"
+clean-002,clean,N/A,Adding type annotations,false,,"### services/calc.ts
+```diff
+@@ -1,3 +1,3 @@
+-function add(a, b) {
++function add(a: number, b: number): number {
+   return a + b;
+ }
+```"
+clean-003,clean,N/A,Extracting named constant,false,,"### config/limits.py
+```diff
+@@ -1,3 +1,4 @@
++MAX_PAGE_SIZE = 50
+ def paginate(queryset, page, size):
+-    return queryset[page * 50 : (page + 1) * 50]
++    return queryset[page * MAX_PAGE_SIZE : (page + 1) * MAX_PAGE_SIZE]
+```"
+clean-004,clean,N/A,Adding docstring,false,,"### utils/math.py
+```diff
+@@ -1,3 +1,4 @@
+ def clamp(value, min_val, max_val):
++    """"""Clamp a value between min_val and max_val.""""""
+     return max(min_val, min(value, max_val))
+```"
+clean-005,clean,N/A,Using f-string instead of format(),false,,"### utils/log.py
+```diff
+@@ -3,2 +3,2 @@
+-    msg = ""User {} performed {}"".format(user.name, action)
++    msg = f""User {user.name} performed {action}""
+     logger.info(msg)
+```"
+clean-006,clean,N/A,Proper error handling with specific exception,false,,"### services/file.py
+```diff
+@@ -3,4 +3,5 @@
++    try:
++        with open(path) as f:
++            return json.load(f)
++    except FileNotFoundError:
++        return {}
+```"
+clean-007,clean,N/A,List comprehension instead of loop,false,,"### utils/transform.py
+```diff
+@@ -3,4 +3,2 @@
+-    names = []
+-    for user in users:
+-        names.append(user.name)
+-    return names
++    return [user.name for user in users]
+```"
+clean-008,clean,N/A,Early return to reduce nesting,false,,"### handlers/order.py
+```diff
+@@ -3,5 +3,5 @@
+-    if order.is_valid():
+-        total = calculate_total(order)
+-        charge(order.customer, total)
++    if not order.is_valid():
++        return None
++    total = calculate_total(order)
++    charge(order.customer, total)
+```"
+clean-009,clean,N/A,Extracting helper functions,false,,"### services/report.py
+```diff
+@@ -10,2 +10,5 @@
++def calculate_totals(data):
++    return sum(row['amount'] for row in data)
++
++def format_currency(amount):
++    return f""${amount:,.2f}""
+```"
+clean-010,clean,N/A,Using destructuring,false,,"### components/UserCard.tsx
+```diff
+@@ -3,3 +3,3 @@
+-  const name = props.name;
+-  const email = props.email;
++  const { name, email } = props;
+   return <div>{name} ({email})</div>;
+```"
+clean-011,clean,N/A,Adding unit tests,false,,"### tests/test_math.py
+```diff
+@@ -0,0 +1,7 @@
++import pytest
++from utils.math import clamp
++
++def test_clamp_within_range():
++    assert clamp(5, 0, 10) == 5
++
++def test_clamp_below_min():
++    assert clamp(-1, 0, 10) == 0
+```"
+clean-012,clean,N/A,Using optional chaining,false,,"### utils/user.ts
+```diff
+@@ -3,3 +3,2 @@
+-  if (user.address && user.address.city) {
+-    return user.address.city;
+-  }
++  return user.address?.city;
+```"
+clean-013,clean,N/A,Correct HTTP status code 201,false,,"### api/items.py
+```diff
+@@ -8,2 +8,2 @@
+-    return jsonify(item.to_dict())
++    return jsonify(item.to_dict()), 201
+```"
+clean-014,clean,N/A,Using enum instead of string literals,false,,"### models/order.ts
+```diff
+@@ -1,4 +1,8 @@
++enum OrderStatus {
++  Pending = 'pending',
++  Shipped = 'shipped',
++  Delivered = 'delivered',
++}
+ interface Order {
+-  status: string;
++  status: OrderStatus;
+ }
+```"
+clean-015,clean,N/A,Using Promise.all for parallel calls,false,,"### services/dashboard.ts
+```diff
+@@ -3,4 +3,2 @@
+-  const users = await fetchUsers();
+-  const orders = await fetchOrders();
+-  const stats = await fetchStats();
++  const [users, orders, stats] = await Promise.all([fetchUsers(), fetchOrders(), fetchStats()]);
+```"
+clean-016,clean,N/A,Named constant for boolean flag,false,,"### config/features.ts
+```diff
+@@ -1,3 +1,4 @@
++const ENABLE_DARK_MODE = true;
+ function getTheme() {
+-  return { darkMode: true };
++  return { darkMode: ENABLE_DARK_MODE };
+ }
+```"
+clean-017,clean,N/A,Using context manager for DB session,false,,"### services/users.py
+```diff
+@@ -3,4 +3,4 @@
++    with db.session.begin():
++        user = User.query.get(user_id)
++        user.name = data['name']
+```"
+clean-018,clean,N/A,Adding input validation,false,,"### api/register.py
+```diff
+@@ -3,2 +3,5 @@
++    if not data.get('email') or '@' not in data['email']:
++        raise ValueError('A valid email is required')
++    if len(data.get('password', '')) < 8:
++        raise ValueError('Password must be at least 8 characters')
+     user = User.create(**data)
+```"
+clean-019,clean,N/A,Guard clauses for param validation,false,,"### services/shipping.go
+```diff
+@@ -5,4 +5,7 @@
++	if weight <= 0 {
++		return 0, fmt.Errorf(""weight must be positive"")
++	}
++	if distance <= 0 {
++		return 0, fmt.Errorf(""distance must be positive"")
++	}
+ 	return weight * float64(distance) * 0.05, nil
+```"
+clean-020,clean,N/A,Using defer for resource cleanup in Go,false,,"### utils/file.go
+```diff
+@@ -5,4 +5,6 @@
++	f, err := os.Open(path)
++	if err != nil {
++		return nil, err
++	}
++	defer f.Close()
++	return io.ReadAll(f)
+```"

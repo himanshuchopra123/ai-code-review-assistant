@@ -122,3 +122,34 @@ export async function reviewWithLLM({
   const input = toolBlock.input as { findings: LLMFinding[] };
   return input.findings ?? [];
 }
+
+export async function summarizePR({
+  repo,
+  pr,
+  diff,
+}: {
+  repo: string;
+  pr: number;
+  diff: string;
+}): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
+
+  const client = new Anthropic({ apiKey });
+
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: 300,
+    system: "You summarize code diffs in 2-3 sentences. Describe WHAT changed and WHY it likely changed. Be specific — name functions, files, and behaviors. No filler phrases.",
+    messages: [
+      {
+        role: "user",
+        content: `Summarize this diff for ${repo} PR #${pr}:\n\n${diff}`,
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") return "";
+  return textBlock.text;
+}

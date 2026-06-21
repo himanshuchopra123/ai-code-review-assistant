@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/webhook-verify";
 import { getInstallationToken } from "@/lib/github-auth";
 import { getPRFiles, formatDiffForReview, postPRReview } from "@/lib/github-api";
-import { reviewWithLLM } from "@/lib/llm-review";
+import { reviewWithLLM, summarizePR } from "@/lib/llm-review";
 import { filterValidFindings } from "@/lib/diff-validator";
 import { upsertRepo, upsertPullRequest, insertReview, insertFindings, updatePRState } from "@/lib/db";
 
@@ -76,13 +76,13 @@ export async function POST(request: NextRequest) {
     const diff = formatDiffForReview(files);
     console.log(`[step2] diff ready — ${diff.length} chars`);
 
-    // Step 3: LLM review
-    const rawFindings = await reviewWithLLM({
-      repo: repository.full_name,
-      pr: pr.number,
-      diff,
-    });
+    // Step 3: LLM review + PR summary (parallel)
+    const [rawFindings, summary] = await Promise.all([
+      reviewWithLLM({ repo: repository.full_name, pr: pr.number, diff }),
+      summarizePR({ repo: repository.full_name, pr: pr.number, diff }),
+    ]);
     console.log(`[step3] LLM returned ${rawFindings.length} finding(s)`);
+    console.log(`[step3] summary: ${summary.slice(0, 100)}...`);
 
     // Step 4: filter out hallucinated line numbers
     const findings = filterValidFindings(files, rawFindings);
@@ -98,7 +98,8 @@ export async function POST(request: NextRequest) {
       repository.name,
       pr.number,
       pr.head.sha,
-      findings
+      findings,
+      summary
     );
     const latencySeconds = Math.round((Date.now() - startTime) / 1000);
     console.log(`[step5] posted review #${ghReviewId} with ${commentCount} comment(s)`);

@@ -25,7 +25,7 @@ function LoginForm() {
 
       if (res.ok) {
         const next = searchParams.get("next") ?? "/dashboard";
-        router.push(next);
+        window.location.href = next;
       } else {
         setError("Wrong password");
       }
