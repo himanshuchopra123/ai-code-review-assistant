@@ -357,8 +357,10 @@ export function getRepo(owner: string, name: string): Repo | undefined {
 export interface RepoMetrics {
   totalReviews: number;
   avgLatencySeconds: number;
-  precision: number;
-  noiseRatioPerPR: number;
+  acknowledgementRate: number;
+  dismissalRate: number;
+  feedbackRate: number;
+  findingsPerPR: number;
   findingsBySeverity: Record<Severity, number>;
   totalFindings: number;
 }
@@ -376,23 +378,32 @@ export function computeMetrics(repo: Repo): RepoMetrics {
       : 0;
 
   const reviewedFindings = allFindings.filter((f) => f.outcome !== "pending");
-  const signalCount = reviewedFindings.filter(
+  const acknowledgedCount = reviewedFindings.filter(
     (f) => f.outcome === "addressed" || f.outcome === "reacted_positive"
   ).length;
-  const precision =
-    reviewedFindings.length > 0
-      ? Math.round((signalCount / reviewedFindings.length) * 100)
-      : 0;
-
-  const prsWithFindings = repo.prs.filter(
-    (pr) => pr.review && pr.review.findings.length > 0
-  );
-  const noiseCount = reviewedFindings.filter(
+  const dismissedCount = reviewedFindings.filter(
     (f) => f.outcome === "dismissed" || f.outcome === "no_action" || f.outcome === "reacted_negative"
   ).length;
-  const noiseRatioPerPR =
-    prsWithFindings.length > 0
-      ? Math.round((noiseCount / prsWithFindings.length) * 10) / 10
+
+  const acknowledgementRate =
+    reviewedFindings.length > 0
+      ? Math.round((acknowledgedCount / reviewedFindings.length) * 100)
+      : 0;
+
+  const dismissalRate =
+    reviewedFindings.length > 0
+      ? Math.round((dismissedCount / reviewedFindings.length) * 100)
+      : 0;
+
+  const feedbackRate =
+    allFindings.length > 0
+      ? Math.round((reviewedFindings.length / allFindings.length) * 100)
+      : 0;
+
+  const prsWithReviews = repo.prs.filter((pr) => pr.review).length;
+  const findingsPerPR =
+    prsWithReviews > 0
+      ? Math.round((allFindings.length / prsWithReviews) * 10) / 10
       : 0;
 
   const findingsBySeverity: Record<Severity, number> = {
@@ -408,8 +419,10 @@ export function computeMetrics(repo: Repo): RepoMetrics {
   return {
     totalReviews,
     avgLatencySeconds,
-    precision,
-    noiseRatioPerPR,
+    acknowledgementRate,
+    dismissalRate,
+    feedbackRate,
+    findingsPerPR,
     findingsBySeverity,
     totalFindings: allFindings.length,
   };

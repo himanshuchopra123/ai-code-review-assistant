@@ -38,7 +38,7 @@ export default async function DashboardPage() {
                     {metrics.totalReviews} reviews &middot;{" "}
                     {metrics.totalFindings} findings &middot; avg{" "}
                     {formatLatency(metrics.avgLatencySeconds)} latency &middot;{" "}
-                    {metrics.precision}% precision
+                    {metrics.acknowledgementRate}% acknowledged
                   </p>
                 </div>
                 <Link

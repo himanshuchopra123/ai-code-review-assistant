@@ -52,20 +52,20 @@ export default async function RepoMetricsPage({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <MetricCard
-            label="Precision"
-            value={`${metrics.precision}%`}
-            sub="signal rate"
-            trend={metrics.precision >= 70 ? "good" : "bad"}
+            label="Acknowledgement rate"
+            value={`${metrics.acknowledgementRate}%`}
+            sub="developers acknowledged"
+            trend={metrics.acknowledgementRate >= 70 ? "good" : "bad"}
             target="target ≥ 75%"
           />
           <MetricCard
-            label="Noise ratio"
-            value={metrics.noiseRatioPerPR.toFixed(1)}
-            sub="per PR"
-            trend={metrics.noiseRatioPerPR <= 2 ? "good" : "bad"}
-            target="target < 2"
+            label="Dismissal rate"
+            value={`${metrics.dismissalRate}%`}
+            sub="developers dismissed"
+            trend={metrics.dismissalRate <= 25 ? "good" : "bad"}
+            target="target < 25%"
           />
           <MetricCard
             label="Avg latency"
@@ -75,9 +75,21 @@ export default async function RepoMetricsPage({
             target="target < 2 min"
           />
           <MetricCard
-            label="Findings"
+            label="Total findings"
             value={String(metrics.totalFindings)}
             sub={buildSeveritySub(metrics.findingsBySeverity)}
+          />
+          <MetricCard
+            label="Feedback rate"
+            value={`${metrics.feedbackRate}%`}
+            sub="developer engagement"
+            trend={metrics.feedbackRate >= 50 ? "good" : "bad"}
+            target="target ≥ 50%"
+          />
+          <MetricCard
+            label="Findings / PR"
+            value={String(metrics.findingsPerPR)}
+            sub="avg per pull request"
           />
         </div>
       </section>
