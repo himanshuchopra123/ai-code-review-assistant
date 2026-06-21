@@ -49,12 +49,15 @@ const SEVERITY_ICON: Record<string, string> = {
   nit: "\u{1F535}",
 };
 
-function formatCommentBody(f: LLMFinding): string {
+function formatCommentBody(f: LLMFinding, feedbackUrl?: string): string {
   const icon = SEVERITY_ICON[f.severity] ?? "";
   const label = `${f.severity.charAt(0).toUpperCase() + f.severity.slice(1)} — ${f.category}`;
   let body = `**${icon} ${label}**\n\n${f.commentText}`;
   if (f.suggestedFix) {
     body += `\n\n**Suggested fix:** ${f.suggestedFix}`;
+  }
+  if (feedbackUrl) {
+    body += `\n\n[![Acknowledge](https://img.shields.io/badge/✓_Acknowledge-22863a?style=flat-square)](${feedbackUrl}&outcome=addressed) [![Dismiss](https://img.shields.io/badge/✗_Dismiss-cb2431?style=flat-square)](${feedbackUrl}&outcome=dismissed)`;
   }
   return body;
 }
@@ -71,7 +74,8 @@ export async function postPRReview(
   pullNumber: number,
   commitSha: string,
   findings: LLMFinding[],
-  summary?: string
+  summary?: string,
+  findingIds?: number[]
 ): Promise<PostedReview> {
   const isClean = findings.length === 0;
   const summaryBlock = summary ? `\n\n**Summary:** ${summary}` : "";
@@ -80,11 +84,22 @@ export async function postPRReview(
     ? `**✅ AI Review — Looks good!**${summaryBlock}\n\nNo issues found in this change.`
     : `**AI Review — ${findings.length} issue${findings.length > 1 ? "s" : ""} found**${summaryBlock}`;
 
-  const comments = findings.map((f) => ({
-    path: f.filePath,
-    line: f.lineNumber,
-    body: formatCommentBody(f),
-  }));
+  const appUrl = process.env.NEXT_PUBLIC_VERCEL_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000";
+
+  const comments = findings.map((f, i) => {
+    const feedbackUrl = findingIds?.[i]
+      ? `${appUrl}/api/feedback?id=${findingIds[i]}`
+      : undefined;
+    return {
+      path: f.filePath,
+      line: f.lineNumber,
+      body: formatCommentBody(f, feedbackUrl),
+    };
+  });
 
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}/reviews`,

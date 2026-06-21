@@ -91,20 +91,7 @@ export async function POST(request: NextRequest) {
       console.log(`  [${f.severity}] ${f.filePath}:${f.lineNumber} — ${f.commentText.slice(0, 80)}`)
     );
 
-    // Step 5: post bundled PR review to GitHub
-    const { reviewId: ghReviewId, commentCount } = await postPRReview(
-      token,
-      repository.owner.login,
-      repository.name,
-      pr.number,
-      pr.head.sha,
-      findings,
-      summary
-    );
-    const latencySeconds = Math.round((Date.now() - startTime) / 1000);
-    console.log(`[step5] posted review #${ghReviewId} with ${commentCount} comment(s)`);
-
-    // Persist to DB
+    // Persist to DB first (so we have finding IDs for feedback buttons)
     const repoId = await upsertRepo(repository.owner.login, repository.name);
     const prId = await upsertPullRequest(
       repoId,
@@ -114,9 +101,23 @@ export async function POST(request: NextRequest) {
       "open",
       new Date().toISOString()
     );
-    const dbReviewId = await insertReview(prId, pr.head.sha, latencySeconds, "completed", ghReviewId);
-    await insertFindings(dbReviewId, findings);
+    const latencySeconds = Math.round((Date.now() - startTime) / 1000);
+    const dbReviewId = await insertReview(prId, pr.head.sha, latencySeconds, "completed");
+    const findingIds = await insertFindings(dbReviewId, findings);
     console.log(`[db] saved review ${dbReviewId} with ${findings.length} finding(s)`);
+
+    // Step 5: post bundled PR review to GitHub (with feedback buttons)
+    const { reviewId: ghReviewId, commentCount } = await postPRReview(
+      token,
+      repository.owner.login,
+      repository.name,
+      pr.number,
+      pr.head.sha,
+      findings,
+      summary,
+      findingIds
+    );
+    console.log(`[step5] posted review #${ghReviewId} with ${commentCount} comment(s)`);
 
   } catch (err) {
     console.error("[webhook] error:", err);

@@ -75,8 +75,8 @@ export async function insertFindings(
   reviewId: number,
   findings: LLMFinding[],
   githubCommentIds?: number[]
-) {
-  if (findings.length === 0) return;
+): Promise<number[]> {
+  if (findings.length === 0) return [];
 
   const rows = findings.map((f, i) => ({
     review_id: reviewId,
@@ -90,8 +90,9 @@ export async function insertFindings(
     posted_at: new Date().toISOString(),
   }));
 
-  const { error } = await supabase.from("findings").insert(rows);
+  const { data, error } = await supabase.from("findings").insert(rows).select("id");
   if (error) throw new Error(`insertFindings: ${error.message}`);
+  return (data ?? []).map((r) => r.id as number);
 }
 
 export async function updateFindingOutcome(
