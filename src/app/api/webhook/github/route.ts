@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/webhook-verify";
 import { getInstallationToken } from "@/lib/github-auth";
-import { getPRFiles, formatDiffForReview, postPRReview } from "@/lib/github-api";
+import { getPRFiles, formatDiffForReview, formatDiffWithContext, fetchReferencedFiles, postPRReview } from "@/lib/github-api";
 import { reviewWithLLM, summarizePR } from "@/lib/llm-review";
 import { filterValidFindings } from "@/lib/diff-validator";
 import { upsertRepo, upsertPullRequest, insertReview, insertFindings, updatePRState } from "@/lib/db";
@@ -73,13 +73,29 @@ export async function POST(request: NextRequest) {
       console.log(`  ${f.status.padEnd(8)} ${f.filename}  +${f.additions}/-${f.deletions}`)
     );
 
-    const diff = formatDiffForReview(files);
-    console.log(`[step2] diff ready — ${diff.length} chars`);
+    const diffOnly = formatDiffForReview(files);
+    console.log(`[step2] diff ready — ${diffOnly.length} chars`);
+
+    // Fetch referenced files for codebase context
+    const referencedFiles = await fetchReferencedFiles(
+      token,
+      repository.owner.login,
+      repository.name,
+      pr.head.sha,
+      files
+    );
+    console.log(`[step2] fetched ${referencedFiles.size} referenced file(s)`);
+    referencedFiles.forEach((_, path) => console.log(`  ref: ${path}`));
+
+    const diff = referencedFiles.size > 0
+      ? formatDiffWithContext(files, referencedFiles)
+      : diffOnly;
+    console.log(`[step2] enriched context — ${diff.length} chars`);
 
     // Step 3: LLM review + PR summary (parallel)
     const [rawFindings, summary] = await Promise.all([
       reviewWithLLM({ repo: repository.full_name, pr: pr.number, diff }),
-      summarizePR({ repo: repository.full_name, pr: pr.number, diff }),
+      summarizePR({ repo: repository.full_name, pr: pr.number, diff: diffOnly }),
     ]);
     console.log(`[step3] LLM returned ${rawFindings.length} finding(s)`);
     console.log(`[step3] summary: ${summary.slice(0, 100)}...`);

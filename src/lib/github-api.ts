@@ -31,12 +31,103 @@ export async function getPRFiles(
   return res.json() as Promise<PRFile[]>;
 }
 
+export async function getFileContent(
+  token: string,
+  owner: string,
+  repo: string,
+  filePath: string,
+  ref: string
+): Promise<string | null> {
+  const res = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}?ref=${ref}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github.v3+json",
+        "User-Agent": "ai-code-reviewer",
+      },
+    }
+  );
+
+  if (!res.ok) return null;
+
+  const data = (await res.json()) as { content?: string; encoding?: string };
+  if (!data.content || data.encoding !== "base64") return null;
+
+  const content = Buffer.from(data.content, "base64").toString("utf8");
+  const lines = content.split("\n");
+  if (lines.length > 300) return lines.slice(0, 300).join("\n") + "\n// ... truncated";
+  return content;
+}
+
+const MAX_REFERENCED_FILES = 10;
+
+export async function fetchReferencedFiles(
+  token: string,
+  owner: string,
+  repo: string,
+  ref: string,
+  files: PRFile[]
+): Promise<Map<string, string>> {
+  const { parseImports } = await import("./import-parser");
+  const referencedFiles = new Map<string, string>();
+  const changedPaths = new Set(files.map((f) => f.filename));
+  const candidatePaths = new Set<string>();
+
+  for (const file of files) {
+    if (!file.patch) continue;
+    const content = await getFileContent(token, owner, repo, file.filename, ref);
+    if (!content) continue;
+
+    const imports = parseImports(content, file.filename);
+    for (const imp of imports) {
+      if (!changedPaths.has(imp) && !candidatePaths.has(imp)) {
+        candidatePaths.add(imp);
+      }
+    }
+  }
+
+  const candidates = Array.from(candidatePaths).slice(0, MAX_REFERENCED_FILES * 2);
+
+  const fetches = candidates.map(async (filePath) => {
+    if (referencedFiles.size >= MAX_REFERENCED_FILES) return;
+    const content = await getFileContent(token, owner, repo, filePath, ref);
+    if (content && referencedFiles.size < MAX_REFERENCED_FILES) {
+      referencedFiles.set(filePath, content);
+    }
+  });
+
+  await Promise.all(fetches);
+  return referencedFiles;
+}
+
 // Formats files into a single diff string for the LLM prompt (step 3)
 export function formatDiffForReview(files: PRFile[]): string {
   return files
     .filter((f) => f.patch)
     .map((f) => `### ${f.filename}\n\`\`\`diff\n${f.patch}\n\`\`\``)
     .join("\n\n");
+}
+
+export function formatDiffWithContext(
+  files: PRFile[],
+  referencedFiles: Map<string, string>
+): string {
+  const diffSection = files
+    .filter((f) => f.patch)
+    .map((f) => `### ${f.filename}\n\`\`\`diff\n${f.patch}\n\`\`\``)
+    .join("\n\n");
+
+  if (referencedFiles.size === 0) return diffSection;
+
+  const refSection = Array.from(referencedFiles.entries())
+    .map(([filePath, content]) => {
+      const ext = filePath.split(".").pop() ?? "";
+      return `### ${filePath}\n\`\`\`${ext}\n${content}\n\`\`\``;
+    })
+    .join("\n\n");
+
+  return `## Changed Files (review these)\n\n${diffSection}\n\n## Referenced Files (for context only — do NOT flag issues here)\n\n${refSection}`;
 }
 
 // Step 5: post a bundled PR review with line comments
@@ -53,7 +144,9 @@ function formatCommentBody(f: LLMFinding, feedbackUrl?: string): string {
   const icon = SEVERITY_ICON[f.severity] ?? "";
   const label = `${f.severity.charAt(0).toUpperCase() + f.severity.slice(1)} — ${f.category}`;
   let body = `**${icon} ${label}**\n\n${f.commentText}`;
-  if (f.suggestedFix) {
+  if (f.fixedCode) {
+    body += `\n\n\`\`\`suggestion\n${f.fixedCode}\n\`\`\``;
+  } else if (f.suggestedFix) {
     body += `\n\n**Suggested fix:** ${f.suggestedFix}`;
   }
   if (feedbackUrl) {

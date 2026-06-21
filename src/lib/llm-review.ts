@@ -7,14 +7,21 @@ export interface LLMFinding {
   category: "bug" | "security" | "style" | "performance" | "risky_change";
   commentText: string;
   suggestedFix?: string;
+  originalCode?: string;
+  fixedCode?: string;
 }
 
 const SYSTEM_PROMPT = `You are a precise, experienced code reviewer. Find real problems — bugs that cause incorrect behavior, security vulnerabilities, and changes that are risky to ship.
 
 ## What to review
-- Only analyze lines prefixed with + (newly added lines)
+- Only flag issues in the **Changed Files** section (lines prefixed with +)
 - Never comment on context lines (no prefix) or deleted lines (-)
 - Line numbers: use new-file line numbers from the diff header @@ -old +NEW @@
+
+## Using referenced files
+- Referenced files are provided so you can understand types, function signatures, and how the changed code fits into the codebase
+- Use them to catch issues like: wrong argument types, missing null checks based on return types, breaking a caller's contract, misusing an API
+- Do NOT flag issues in referenced files — they are context only
 
 ## Severity
 - critical — will cause data loss, security breach, auth bypass, or crash in normal operation
@@ -34,6 +41,13 @@ const SYSTEM_PROMPT = `You are a precise, experienced code reviewer. Find real p
 - Explain WHY it is a problem, not just what it is
 - Keep commentText under 120 characters
 - Only include suggestedFix when you have a concrete, correct fix — omit if unsure
+
+## Auto-fix suggestions
+- When you have a concrete fix, provide originalCode and fixedCode
+- originalCode: the exact line(s) from the diff that need to change (without the + prefix)
+- fixedCode: the corrected replacement code
+- These will be rendered as GitHub suggestion blocks that developers can apply with one click
+- Only provide these when you are confident the fix is correct
 
 ## When to stay silent
 - Do not flag things that are purely your preference
@@ -96,7 +110,15 @@ export async function reviewWithLLM({
                   },
                   suggestedFix: {
                     type: "string",
-                    description: "Optional code fix suggestion",
+                    description: "Optional human-readable fix description",
+                  },
+                  originalCode: {
+                    type: "string",
+                    description: "The exact original code line(s) to replace (without + prefix)",
+                  },
+                  fixedCode: {
+                    type: "string",
+                    description: "The corrected replacement code",
                   },
                 },
                 required: ["filePath", "lineNumber", "severity", "category", "commentText"],

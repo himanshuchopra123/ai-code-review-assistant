@@ -1,0 +1,2114 @@
+[
+  {
+    "id": "sec-001",
+    "category": "security",
+    "description": "SQL injection via string concatenation",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "api/users.py",
+        "lineNumber": 13,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "SQL injection vulnerability: user_id is concatenated directly into the query without parameterization",
+        "suggestedFix": "result = conn.execute(\"SELECT * FROM users WHERE id = ?\", (user_id,))"
+      }
+    ]
+  },
+  {
+    "id": "sec-002",
+    "category": "security",
+    "description": "Hardcoded API secret in source code",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "config/settings.py",
+        "lineNumber": 6,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "Hardcoded Stripe secret key exposed in source code. This key must be loaded from environment variables or secure configuration, never committed to repo.",
+        "suggestedFix": "STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')"
+      }
+    ]
+  },
+  {
+    "id": "sec-003",
+    "category": "security",
+    "description": "XSS vulnerability via innerHTML",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "components/Comment.tsx",
+        "lineNumber": 9,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "dangerouslySetInnerHTML with unsanitized 'body' enables XSS attacks. Sanitize HTML before rendering or use safe text rendering.",
+        "suggestedFix": "Use a sanitization library (e.g., DOMPurify) or render as text: <div>{body}</div>"
+      }
+    ]
+  },
+  {
+    "id": "sec-004",
+    "category": "security",
+    "description": "Missing auth check on admin endpoint",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "routes/admin.js",
+        "lineNumber": 3,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "Missing authentication/authorization check. Any user can delete any user without permission verification."
+      },
+      {
+        "filePath": "routes/admin.js",
+        "lineNumber": 3,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "No error handling for invalid/non-existent user IDs. If ID doesn't exist, deletion silently succeeds with no indication."
+      },
+      {
+        "filePath": "routes/admin.js",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "No validation of req.params.id. Could accept invalid MongoDB ObjectIds or other malformed input."
+      }
+    ]
+  },
+  {
+    "id": "sec-005",
+    "category": "security",
+    "description": "Storing password in plain text",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 4,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "models/user.py",
+        "lineNumber": 17,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "Storing plaintext password instead of hash. This removes security and exposes user credentials if database is compromised.",
+        "suggestedFix": "self.password_hash = bcrypt.hash(password)"
+      }
+    ]
+  },
+  {
+    "id": "sec-006",
+    "category": "security",
+    "description": "Eval of user-controlled input",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "utils/calculator.py",
+        "lineNumber": 4,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "Using eval() is a critical security vulnerability. It executes arbitrary code and enables code injection attacks.",
+        "suggestedFix": "Use ast.literal_eval() for safe literal evaluation or implement a proper expression parser."
+      }
+    ]
+  },
+  {
+    "id": "sec-007",
+    "category": "security",
+    "description": "Path traversal in file download",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "routes/files.js",
+        "lineNumber": 5,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "Path traversal vulnerability: filename from req.query.file is not validated, allowing access to arbitrary files via '../' sequences",
+        "suggestedFix": "Use path.join() and path.resolve() to prevent traversal: const safePath = path.resolve('/uploads', filename); verify it starts with '/uploads'"
+      }
+    ]
+  },
+  {
+    "id": "sec-008",
+    "category": "security",
+    "description": "JWT token with no expiration",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "auth/token.js",
+        "lineNumber": 6,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "SECRET_KEY appears to be hardcoded or unvalidated. Ensure it's from secure environment variable and not exposed.",
+        "suggestedFix": "Use process.env.JWT_SECRET or similar, and validate it's set at startup."
+      }
+    ]
+  },
+  {
+    "id": "sec-009",
+    "category": "security",
+    "description": "CORS allowing all origins with credentials",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "server.js",
+        "lineNumber": 11,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "Setting origin: '*' with credentials: true violates CORS security. Browsers reject this combination. Use specific origins instead.",
+        "suggestedFix": "app.use(cors({\n  origin: 'https://yourdomain.com',\n  credentials: true\n}));"
+      }
+    ]
+  },
+  {
+    "id": "sec-010",
+    "category": "security",
+    "description": "Deserializing untrusted YAML",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "config/loader.py",
+        "lineNumber": 7,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "yaml.load() is unsafe; use yaml.safe_load() to prevent arbitrary code execution attacks.",
+        "suggestedFix": "config = yaml.safe_load(raw_input)"
+      }
+    ]
+  },
+  {
+    "id": "sec-011",
+    "category": "security",
+    "description": "Logging sensitive user data",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/auth.py",
+        "lineNumber": 11,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "Logging password in plaintext is a critical security risk. Passwords should never be logged.",
+        "suggestedFix": "logger.info(f\"Login attempt: user={username}\")"
+      }
+    ]
+  },
+  {
+    "id": "sec-012",
+    "category": "security",
+    "description": "Weak hash algorithm MD5",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "utils/hash.py",
+        "lineNumber": 5,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "MD5 is cryptographically broken. Use hashlib.sha256() instead for secure token hashing.",
+        "suggestedFix": "return hashlib.sha256(token.encode()).hexdigest()"
+      }
+    ]
+  },
+  {
+    "id": "sec-013",
+    "category": "security",
+    "description": "Command injection via os.system",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "utils/deploy.py",
+        "lineNumber": 6,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "os.system() with unsanitized f-string is vulnerable to shell injection if branch contains special characters or user input.",
+        "suggestedFix": "Use subprocess.run() with a list instead: subprocess.run(['git', 'checkout', branch, '&&', './deploy.sh'], check=True)"
+      },
+      {
+        "filePath": "utils/deploy.py",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "os.system() does not raise exceptions on command failure; return code is often ignored, causing silent failures.",
+        "suggestedFix": "Use subprocess.run(..., check=True) to raise CalledProcessError on non-zero exit codes"
+      }
+    ]
+  },
+  {
+    "id": "sec-014",
+    "category": "security",
+    "description": "SSRF via user-controlled URL",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "api/proxy.py",
+        "lineNumber": 5,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "Unvalidated user input passed to requests.get() enables Server-Side Request Forgery (SSRF) attacks. Validate and restrict URLs before use."
+      },
+      {
+        "filePath": "api/proxy.py",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "response.content may be binary data; returning raw bytes without proper Content-Type header could break clients expecting text/html."
+      }
+    ]
+  },
+  {
+    "id": "sec-015",
+    "category": "security",
+    "description": "Exposing stack trace in error response",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "middleware/error.js",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "security",
+        "commentText": "Exposing error.stack to clients reveals sensitive information like file paths and internal code structure. Only return stack in development mode.",
+        "suggestedFix": "res.status(500).json({ error: err.message, ...(process.env.NODE_ENV === 'development' && { stack: err.stack }) });"
+      }
+    ]
+  },
+  {
+    "id": "crit-001",
+    "category": "bug",
+    "description": "Null dereference on optional user",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/profile.ts",
+        "lineNumber": 9,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "user may be null if findById returns no result, causing null dereference on user.name",
+        "suggestedFix": "Add null check: if (!user) throw new Error('User not found'); before accessing user.name"
+      }
+    ]
+  },
+  {
+    "id": "crit-002",
+    "category": "bug",
+    "description": "Infinite loop with no exit condition",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "workers/processor.py",
+        "lineNumber": 11,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Infinite loop with no break condition or exception handling. Worker will hang if queue.get() blocks and cannot process shutdown signals.",
+        "suggestedFix": "Add proper shutdown handling: use a sentinel value, check for StopIteration, or implement signal handling."
+      },
+      {
+        "filePath": "workers/processor.py",
+        "lineNumber": 12,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "queue.get() will block indefinitely if queue is empty with no timeout. process(item) exceptions are not caught, crashing the worker.",
+        "suggestedFix": "Add timeout parameter and try-except: queue.get(timeout=N) and wrap process(item) in exception handling."
+      }
+    ]
+  },
+  {
+    "id": "crit-003",
+    "category": "bug",
+    "description": "Deleting all records instead of filtered",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "api/cleanup.py",
+        "lineNumber": 6,
+        "severity": "critical",
+        "category": "bug",
+        "commentText": "Removing the expiration filter causes delete_many({}) to delete ALL sessions instead of only expired ones, causing data loss."
+      }
+    ]
+  },
+  {
+    "id": "crit-004",
+    "category": "bug",
+    "description": "Off-by-one in boundary check",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "billing/invoice.py",
+        "lineNumber": 22,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Changed >= to > breaks existing behavior. Orders with quantity exactly equal to min_quantity no longer get discounted.",
+        "suggestedFix": "if items[i].quantity >= min_quantity:"
+      }
+    ]
+  },
+  {
+    "id": "crit-005",
+    "category": "bug",
+    "description": "Writing to wrong variable — result lost",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 0,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/order.py",
+        "lineNumber": 17,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Discount applied to subtotal AFTER tax calculation. Tax should be recalculated on discounted amount.",
+        "suggestedFix": "Move discount application before tax calculation: subtotal = subtotal - order.discount, then tax = subtotal * TAX_RATE"
+      }
+    ]
+  },
+  {
+    "id": "crit-006",
+    "category": "bug",
+    "description": "Swapped arguments in function call",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/transfer.py",
+        "lineNumber": 11,
+        "severity": "critical",
+        "category": "bug",
+        "commentText": "Arguments to ledger.record() are swapped: to_account and from_account are reversed, causing transfers to record in opposite direction.",
+        "suggestedFix": "ledger.record(from_account, to_account, amount)"
+      }
+    ]
+  },
+  {
+    "id": "crit-007",
+    "category": "bug",
+    "description": "Division by zero on empty list",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "analytics/stats.py",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Division by zero when scores is empty. len(scores) could be 0, causing ZeroDivisionError."
+      }
+    ]
+  },
+  {
+    "id": "crit-008",
+    "category": "bug",
+    "description": "Unclosed file handle leaks resources",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 4,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "utils/export.py",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "File handle 'f' is never closed; will leak file descriptor. Use context manager or explicit close().",
+        "suggestedFix": "with open('output.csv', 'w') as f:\n    for r in records:\n        f.write(r.to_csv())"
+      },
+      {
+        "filePath": "utils/export.py",
+        "lineNumber": 4,
+        "severity": "minor",
+        "category": "risky_change",
+        "commentText": "Hardcoded 'output.csv' filename limits flexibility and makes testing difficult.",
+        "suggestedFix": "Accept filename as a parameter: def export(records, filename='output.csv'):"
+      }
+    ]
+  },
+  {
+    "id": "crit-009",
+    "category": "bug",
+    "description": "Silently swallowing all exceptions",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "services/payment.py",
+        "lineNumber": 12,
+        "severity": "critical",
+        "category": "bug",
+        "commentText": "Bare except clause silently swallows all exceptions including payment failures. Failures must be logged and returned to the caller."
+      },
+      {
+        "filePath": "services/payment.py",
+        "lineNumber": 13,
+        "severity": "critical",
+        "category": "bug",
+        "commentText": "Empty pass statement hides payment failures. Caller has no way to know if the charge succeeded or failed."
+      }
+    ]
+  },
+  {
+    "id": "crit-010",
+    "category": "bug",
+    "description": "Assignment instead of comparison",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 4,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "handlers/auth.js",
+        "lineNumber": 7,
+        "severity": "critical",
+        "category": "bug",
+        "commentText": "Assignment operator (=) used instead of comparison (==). This silently mutates user.role and always evaluates to truthy.",
+        "suggestedFix": "if (user.role === 'admin') {"
+      }
+    ]
+  },
+  {
+    "id": "crit-011",
+    "category": "bug",
+    "description": "Mutable default argument in Python",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "utils/config.py",
+        "lineNumber": 1,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Mutable default argument `items=[]` is shared across calls, causing unexpected state mutation",
+        "suggestedFix": "def get_defaults(items=None):\n    if items is None:\n        items = []\n    items.append('new_item')\n    return items"
+      }
+    ]
+  },
+  {
+    "id": "crit-012",
+    "category": "bug",
+    "description": "Race condition on shared counter",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "services/inventory.go",
+        "lineNumber": 16,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Missing return statement or error handling. Function doesn't indicate success/failure of decrement operation."
+      },
+      {
+        "filePath": "services/inventory.go",
+        "lineNumber": 17,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Silent failure: if count <= 0, itemID is not decremented. Caller cannot distinguish between success and insufficient stock."
+      }
+    ]
+  },
+  {
+    "id": "crit-013",
+    "category": "bug",
+    "description": "Double-close of database connection",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "db/pool.go",
+        "lineNumber": 23,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "conn.Close() called twice: once in defer (line 21) and again explicitly (line 23). This causes double-close."
+      },
+      {
+        "filePath": "db/pool.go",
+        "lineNumber": 22,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Query result not checked for errors. conn.QueryRow() can fail silently if error is ignored.",
+        "suggestedFix": "result, err := conn.QueryRow(ctx, \"SELECT 1\"); if err != nil { return err }"
+      }
+    ]
+  },
+  {
+    "id": "crit-014",
+    "category": "bug",
+    "description": "Integer overflow in multiplication",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 0,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "billing/calc.js",
+        "lineNumber": 5,
+        "severity": "critical",
+        "category": "bug",
+        "commentText": "Formula multiplies by 365 unconditionally. This calculates annual cost, not per-transaction cost. Clarify intended behavior and whether 365 should be conditional.",
+        "suggestedFix": "return priceDollars * 100 * quantity; // or document why 365x multiplier is needed"
+      }
+    ]
+  },
+  {
+    "id": "crit-015",
+    "category": "bug",
+    "description": "Missing await on async call",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "services/email.ts",
+        "lineNumber": 9,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "mailer.send() is called without await. If async, the email may not send before logger.info() executes.",
+        "suggestedFix": "await mailer.send(user.email, 'Welcome!', template);"
+      }
+    ]
+  },
+  {
+    "id": "maj-001",
+    "category": "bug",
+    "description": "Wrong operator — condition always true",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "validators/age.py",
+        "lineNumber": 4,
+        "severity": "critical",
+        "category": "bug",
+        "commentText": "Logic error: condition uses 'or' instead of 'and'. Will always be true for any age value.",
+        "suggestedFix": "return age > 0 and age < 150"
+      }
+    ]
+  },
+  {
+    "id": "maj-002",
+    "category": "bug",
+    "description": "Missing return in error branch",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "api/handler.js",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Missing return statement after error response. Code will continue executing and call createUser with incomplete body.",
+        "suggestedFix": "res.status(400).json({ error: 'Email required' });\n    return;"
+      }
+    ]
+  },
+  {
+    "id": "maj-003",
+    "category": "bug",
+    "description": "String compared to number without conversion",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": []
+  },
+  {
+    "id": "maj-004",
+    "category": "bug",
+    "description": "Mutating array while iterating",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "utils/filter.py",
+        "lineNumber": 5,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Removing items from a list while iterating over it causes elements to be skipped. Use a list comprehension or filter instead.",
+        "suggestedFix": "users[:] = [user for user in users if user.is_active]"
+      }
+    ]
+  },
+  {
+    "id": "maj-005",
+    "category": "bug",
+    "description": "setTimeout in critical path causes race",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "services/checkout.js",
+        "lineNumber": 13,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "setTimeout with 0ms delay defers inventory update, creating race condition where order returns success before inventory is actually updated.",
+        "suggestedFix": "Call updateInventory(order) directly before return, or use async/await with proper error handling."
+      },
+      {
+        "filePath": "services/checkout.js",
+        "lineNumber": 14,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "updateInventory errors are silently swallowed—order marked success even if inventory update fails.",
+        "suggestedFix": "Await inventory update result and handle errors before returning success."
+      }
+    ]
+  },
+  {
+    "id": "maj-006",
+    "category": "bug",
+    "description": "ReDoS vulnerable regex",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "validators/email.js",
+        "lineNumber": 2,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "EMAIL_REGEX allows consecutive '@' symbols and empty local/domain parts due to greedy '*' quantifiers. Use '+' or add anchors.",
+        "suggestedFix": "const EMAIL_REGEX = /^([a-zA-Z0-9]+)@([a-zA-Z0-9]+)$/;"
+      },
+      {
+        "filePath": "validators/email.js",
+        "lineNumber": 2,
+        "severity": "minor",
+        "category": "bug",
+        "commentText": "Regex doesn't allow dots in domain or local parts, rejecting valid emails like 'user.name@example.com'.",
+        "suggestedFix": "const EMAIL_REGEX = /^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9.-]+$/;"
+      }
+    ]
+  },
+  {
+    "id": "maj-007",
+    "category": "bug",
+    "description": "Float equality comparison",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "billing/discount.py",
+        "lineNumber": 7,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Floating-point equality check (final == 29.99) is unreliable due to precision errors. Use approximate comparison instead."
+      }
+    ]
+  },
+  {
+    "id": "maj-008",
+    "category": "bug",
+    "description": "Shadowing outer variable in loop",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 0,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "utils/transform.py",
+        "lineNumber": 5,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Assignments overwrite result instead of appending. Loop will only retain the last transformed item.",
+        "suggestedFix": "result.append(transform(item))"
+      }
+    ]
+  },
+  {
+    "id": "maj-009",
+    "category": "bug",
+    "description": "Swallowing error cause in Go",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": false,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "services/api.go",
+        "lineNumber": 13,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "Removing error wrapping loses the underlying error context. This breaks debugging and error chains. Use %w to preserve the original error.",
+        "suggestedFix": "return nil, fmt.Errorf(\"fetch failed: %w\", err)"
+      }
+    ]
+  },
+  {
+    "id": "maj-010",
+    "category": "bug",
+    "description": "Goroutine leak — no cancel mechanism",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 4,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "workers/monitor.go",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "Goroutine launched without lifecycle management. No way to stop it; will run indefinitely and leak on shutdown.",
+        "suggestedFix": "Add a context parameter and check for cancellation: for { select { case <-ctx.Done(): return; default: checkHealth() } }"
+      },
+      {
+        "filePath": "workers/monitor.go",
+        "lineNumber": 8,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "checkHealth() errors are silently ignored. Failures won't be logged or handled, making debugging difficult.",
+        "suggestedFix": "Capture and log any error: if err := checkHealth(); err != nil { log.Error(err) }"
+      }
+    ]
+  },
+  {
+    "id": "maj-011",
+    "category": "bug",
+    "description": "useEffect missing cleanup",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "components/Dashboard.tsx",
+        "lineNumber": 10,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "setInterval is not cleaned up in useEffect. This causes a memory leak and multiple intervals to accumulate on re-renders.",
+        "suggestedFix": "return () => clearInterval(interval); at the end of the useEffect callback"
+      },
+      {
+        "filePath": "components/Dashboard.tsx",
+        "lineNumber": 10,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Empty dependency array will cause the effect to run only once, but fetch('stats') runs every 5s with no cleanup, leading to stale state or missed updates.",
+        "suggestedFix": "Add dependencies to the effect if it relies on external state, or ensure cleanup is properly handled"
+      }
+    ]
+  },
+  {
+    "id": "maj-012",
+    "category": "bug",
+    "description": "Using == instead of === in JS",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "utils/check.js",
+        "lineNumber": 3,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Comparing user.role to boolean true is likely a type error. If role is a string like 'admin', this will always be false. Use proper role check.",
+        "suggestedFix": "if (user.role === 'admin') {\n    return true;\n  }"
+      }
+    ]
+  },
+  {
+    "id": "maj-013",
+    "category": "bug",
+    "description": "Wrong timezone handling",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 3,
+    "findings": []
+  },
+  {
+    "id": "maj-014",
+    "category": "bug",
+    "description": "Unhandled promise rejection",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": []
+  },
+  {
+    "id": "maj-015",
+    "category": "bug",
+    "description": "Using wrong map key",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/pricing.py",
+        "lineNumber": 10,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Missing null/key check: prices dict may not contain 'usd' key, causing KeyError at runtime"
+      }
+    ]
+  },
+  {
+    "id": "min-001",
+    "category": "bug",
+    "description": "Missing default in switch",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "utils/status.ts",
+        "lineNumber": 7,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Switch statement has no default case and doesn't return a value for unhandled status values, causing undefined return."
+      }
+    ]
+  },
+  {
+    "id": "min-002",
+    "category": "bug",
+    "description": "Magic numbers without constants",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 0,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/retry.py",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Hardcoded loop limit (7) with no retry logic. If all requests fail, exceptions propagate with no backoff or retry mechanism."
+      },
+      {
+        "filePath": "services/retry.py",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Hardcoded timeout (3.5s) and no exception handling. Network errors, timeouts, and connection failures will crash the function."
+      }
+    ]
+  },
+  {
+    "id": "min-003",
+    "category": "bug",
+    "description": "Empty catch block hides errors",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/cache.ts",
+        "lineNumber": 9,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "JSON.parse will throw on empty string. Parsing '' always fails and crashes the try block.",
+        "suggestedFix": "return JSON.parse(localStorage.getItem(key) ?? '{}');"
+      },
+      {
+        "filePath": "services/cache.ts",
+        "lineNumber": 11,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Empty catch block silently swallows all errors. No fallback value returned, causing undefined."
+      }
+    ]
+  },
+  {
+    "id": "min-004",
+    "category": "bug",
+    "description": "Not trimming input before validation",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "validators/form.js",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Email validation only checks for '@' presence. This allows invalid emails like 'a@' or '@b'. Use a proper regex or library.",
+        "suggestedFix": "const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/; return emailRegex.test(input);"
+      }
+    ]
+  },
+  {
+    "id": "min-005",
+    "category": "bug",
+    "description": "String concatenation for URL building",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": false,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "api/client.ts",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "security",
+        "commentText": "URL constructed via string concatenation allows injection attacks. Use URL parameters or proper encoding.",
+        "suggestedFix": "return fetch(`/api/users/${encodeURIComponent(name)}/profile`);"
+      }
+    ]
+  },
+  {
+    "id": "min-006",
+    "category": "bug",
+    "description": "Redundant boolean comparison",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": false,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "utils/check.py",
+        "lineNumber": 3,
+        "severity": "nit",
+        "category": "style",
+        "commentText": "Use 'if feature.active:' instead of '== True' for clearer boolean comparison."
+      }
+    ]
+  },
+  {
+    "id": "min-007",
+    "category": "bug",
+    "description": "Not handling empty array",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "utils/stats.js",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Accessing items[0].name without checking if items array is empty or exists. Will throw runtime error if items is empty.",
+        "suggestedFix": "Add guard: if (!items || items.length === 0) return null; before accessing items[0]"
+      }
+    ]
+  },
+  {
+    "id": "min-008",
+    "category": "bug",
+    "description": "Using var instead of let/const",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": []
+  },
+  {
+    "id": "min-009",
+    "category": "bug",
+    "description": "console.log left in production",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": false,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "services/auth.ts",
+        "lineNumber": 14,
+        "severity": "major",
+        "category": "security",
+        "commentText": "Logging decoded JWT token exposes sensitive user data (claims, user IDs, roles). Remove before shipping.",
+        "suggestedFix": "Remove the console.log statement"
+      }
+    ]
+  },
+  {
+    "id": "min-010",
+    "category": "bug",
+    "description": "Unused imports",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": false,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "pages/home.tsx",
+        "lineNumber": 2,
+        "severity": "minor",
+        "category": "style",
+        "commentText": "React is already imported from 'react' on line 1; importing hooks from same module creates redundant imports",
+        "suggestedFix": "Combine into single import: import React, { useState, useEffect, useCallback } from 'react';"
+      }
+    ]
+  },
+  {
+    "id": "min-011",
+    "category": "bug",
+    "description": "Inconsistent error messages",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "api/orders.py",
+        "lineNumber": 9,
+        "severity": "minor",
+        "category": "style",
+        "commentText": "Inconsistent error message formatting: 'items' error uses '!!!' while 'customer_id' uses plain text. Standardize for clarity."
+      },
+      {
+        "filePath": "api/orders.py",
+        "lineNumber": 11,
+        "severity": "minor",
+        "category": "bug",
+        "commentText": "Both validations use `.get()` which treats empty lists/strings as truthy. Consider explicit `not in` checks for stricter validation.",
+        "suggestedFix": "Use `'items' not in data or not data['items']` for items, and `'customer_id' not in data or not data.get('customer_id')` for customer_id"
+      }
+    ]
+  },
+  {
+    "id": "min-012",
+    "category": "bug",
+    "description": "Sync file I/O in async handler",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "routes/config.js",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "readFileSync is synchronous and blocks the event loop. Use fs.promises.readFile or fs.readFile with callback for async handling.",
+        "suggestedFix": "const data = await fs.promises.readFile('./config.json', 'utf8');\nres.json(JSON.parse(data));"
+      },
+      {
+        "filePath": "routes/config.js",
+        "lineNumber": 7,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "JSON.parse can throw if config.json is invalid JSON. Must wrap in try-catch to handle errors gracefully.",
+        "suggestedFix": "try {\n  res.json(JSON.parse(data));\n} catch (err) {\n  res.status(400).json({ error: 'Invalid JSON' });\n}"
+      },
+      {
+        "filePath": "routes/config.js",
+        "lineNumber": 6,
+        "severity": "minor",
+        "category": "risky_change",
+        "commentText": "Hard-coded file path './config.json' has no existence check. File may not exist, causing ENOENT error.",
+        "suggestedFix": "Consider configurable path with fs.existsSync check or use process.env.CONFIG_PATH"
+      }
+    ]
+  },
+  {
+    "id": "min-013",
+    "category": "bug",
+    "description": "Generic error message hides root cause",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/db.py",
+        "lineNumber": 11,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Catching IntegrityError silently hides duplicate key or constraint violations. Should re-raise or handle specifically.",
+        "suggestedFix": "except IntegrityError as e:\n        log.warning(f\"Integrity error inserting record: {e}\")\n        raise"
+      },
+      {
+        "filePath": "services/db.py",
+        "lineNumber": 12,
+        "severity": "minor",
+        "category": "bug",
+        "commentText": "Error response lacks specificity. 'something went wrong' doesn't help debug or inform users of actual constraint.",
+        "suggestedFix": "return {\"error\": \"Record already exists or violates constraints\"}"
+      }
+    ]
+  },
+  {
+    "id": "min-014",
+    "category": "bug",
+    "description": "Case-sensitive string comparison",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": false,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "validators/role.py",
+        "lineNumber": 3,
+        "severity": "major",
+        "category": "security",
+        "commentText": "String comparison for role check is case-sensitive and fragile. Use enum or normalized constant to prevent auth bypass via capitalization variations.",
+        "suggestedFix": "Use a Role enum or define ADMIN_ROLE constant: return user.role == Role.ADMIN or return user.role.upper() == \"ADMIN\""
+      }
+    ]
+  },
+  {
+    "id": "min-015",
+    "category": "bug",
+    "description": "Date without locale consideration",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": false,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "components/Header.tsx",
+        "lineNumber": 5,
+        "severity": "major",
+        "category": "performance",
+        "commentText": "new Date() and toLocaleDateString() called on every render, creates unnecessary object garbage and slow locale parsing repeated needlessly."
+      }
+    ]
+  },
+  {
+    "id": "perf-001",
+    "category": "performance",
+    "description": "N+1 query inside loop",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "api/orders.py",
+        "lineNumber": 7,
+        "severity": "major",
+        "category": "performance",
+        "commentText": "N+1 query: fetching Customer for each order individually. Use join or bulk load instead."
+      },
+      {
+        "filePath": "api/orders.py",
+        "lineNumber": 7,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Customer.query.get() may return None, causing AttributeError on .name access if customer doesn't exist."
+      }
+    ]
+  },
+  {
+    "id": "perf-002",
+    "category": "performance",
+    "description": "Loading entire table into memory",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": []
+  },
+  {
+    "id": "perf-003",
+    "category": "performance",
+    "description": "Inline object causes unnecessary re-renders",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": []
+  },
+  {
+    "id": "perf-004",
+    "category": "performance",
+    "description": "Sync crypto blocking event loop",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": false,
+    "keywordHits": 2,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "auth/hash.js",
+        "lineNumber": 5,
+        "severity": "major",
+        "category": "security",
+        "commentText": "Missing salt parameter in pbkdf2Sync. Current code passes undefined salt, weakening the hash security.",
+        "suggestedFix": "Ensure salt parameter is properly initialized before use, e.g., crypto.randomBytes(16) or passed as an argument"
+      }
+    ]
+  },
+  {
+    "id": "perf-005",
+    "category": "performance",
+    "description": "String concat in loop instead of join",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "utils/csv.py",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "performance",
+        "commentText": "String concatenation in loop is O(n²). Use list and ''.join() instead for better performance.",
+        "suggestedFix": "output_lines = []\nfor row in rows:\n    output_lines.append(\",\".join(row))\nreturn \"\\n\".join(output_lines)"
+      }
+    ]
+  },
+  {
+    "id": "perf-006",
+    "category": "performance",
+    "description": "Missing index on queried column",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": false,
+    "keywordHits": 0,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "migrations/003.sql",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "status column uses TEXT without constraints. Use ENUM or CHECK for valid values to prevent invalid statuses.",
+        "suggestedFix": "status VARCHAR(50) NOT NULL CHECK (status IN ('pending', 'completed', 'cancelled')) -- or use ENUM type"
+      },
+      {
+        "filePath": "migrations/003.sql",
+        "lineNumber": 3,
+        "severity": "minor",
+        "category": "bug",
+        "commentText": "customer_email lacks uniqueness/format validation. Consider adding UNIQUE constraint or email domain check.",
+        "suggestedFix": "customer_email TEXT NOT NULL UNIQUE,"
+      }
+    ]
+  },
+  {
+    "id": "perf-007",
+    "category": "performance",
+    "description": "SELECT * when only one column needed",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "api/users.py",
+        "lineNumber": 5,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "SQL query is vulnerable to injection. Use parameterized queries instead of string formatting.",
+        "suggestedFix": "users = db.execute(\"SELECT * FROM users WHERE active = ?\", [True])"
+      },
+      {
+        "filePath": "api/users.py",
+        "lineNumber": 5,
+        "severity": "major",
+        "category": "performance",
+        "commentText": "Fetching all rows to count them is inefficient. Use COUNT(*) aggregate function instead."
+      }
+    ]
+  },
+  {
+    "id": "perf-008",
+    "category": "performance",
+    "description": "Regex recompiled on every call",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": false,
+    "keywordHits": 2,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "validators/input.py",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Regex raw string uses single backslashes instead of double. Will cause SyntaxError: bad escape sequence.",
+        "suggestedFix": "pattern = re.compile(r'^\\+?[1-9]\\d{1,14}$') should be pattern = re.compile(r'^\\+?[1-9]\\d{1,14}$')"
+      }
+    ]
+  },
+  {
+    "id": "perf-009",
+    "category": "performance",
+    "description": "Expensive Intl object created each render",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": []
+  },
+  {
+    "id": "perf-010",
+    "category": "performance",
+    "description": "O(n^2) nested loop instead of Set",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": false,
+    "keywordHits": 3,
+    "keywordTotal": 5,
+    "findings": [
+      {
+        "filePath": "utils/dedupe.py",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Nested loop finds all matches without deduplication. If 'a' matches multiple elements in list_b, it gets appended multiple times.",
+        "suggestedFix": "Use a set to track seen values: `if a == b and a not in duplicates: duplicates.append(a)` or use set operations."
+      }
+    ]
+  },
+  {
+    "id": "risk-001",
+    "category": "risky_change",
+    "description": "Removing rate limiting",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "middleware/rateLimit.js",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "Rate limiting middleware removed from apiRouter. This removes protection against abuse and DoS attacks on the /data endpoint.",
+        "suggestedFix": "Restore the rate limiting middleware: apiRouter.use(rateLimit({ windowMs: 60000, max: 100 }));"
+      }
+    ]
+  },
+  {
+    "id": "risk-002",
+    "category": "risky_change",
+    "description": "Changing public API return shape",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 0,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "api/v1/users.py",
+        "lineNumber": 7,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "Response format changed from array to object. This silently breaks all clients expecting a JSON array, risking widespread integration failures."
+      }
+    ]
+  },
+  {
+    "id": "risk-003",
+    "category": "risky_change",
+    "description": "Removing input validation",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "api/submit.py",
+        "lineNumber": 5,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "Removed schema validation check. This removes the guard against invalid input, allowing unvalidated data to reach process().",
+        "suggestedFix": "Restore the validation: if not validate_schema(data):\n    raise ValidationError('Invalid input')"
+      }
+    ]
+  },
+  {
+    "id": "risk-004",
+    "category": "risky_change",
+    "description": "Changing DB column type",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": false,
+    "keywordHits": 2,
+    "keywordTotal": 4,
+    "findings": [
+      {
+        "filePath": "migrations/005.sql",
+        "lineNumber": 1,
+        "severity": "critical",
+        "category": "bug",
+        "commentText": "Converting amount to INTEGER loses decimal precision. Financial amounts must use NUMERIC or DECIMAL to prevent data corruption.",
+        "suggestedFix": "ALTER TABLE payments ALTER COLUMN amount TYPE NUMERIC(10,2) USING amount::numeric;"
+      }
+    ]
+  },
+  {
+    "id": "risk-005",
+    "category": "risky_change",
+    "description": "Removing error boundary",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "App.tsx",
+        "lineNumber": 9,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "Removing ErrorBoundary wrapper removes runtime error handling. Unhandled React errors will now crash the entire app instead of showing ErrorPage."
+      }
+    ]
+  },
+  {
+    "id": "risk-006",
+    "category": "risky_change",
+    "description": "Removing transaction wrapper",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": true,
+    "keywordHits": 2,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/transfer.py",
+        "lineNumber": 6,
+        "severity": "critical",
+        "category": "risky_change",
+        "commentText": "Removed db.transaction() wrapper. Debit and credit are now non-atomic; if credit fails, money is lost. Restores the guard."
+      }
+    ]
+  },
+  {
+    "id": "risk-007",
+    "category": "risky_change",
+    "description": "Disabling SSL verification",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": false,
+    "categoryMatch": false,
+    "keywordHits": 3,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/api_client.py",
+        "lineNumber": 6,
+        "severity": "critical",
+        "category": "security",
+        "commentText": "verify=False disables SSL certificate verification. This allows MITM attacks. Remove this or use proper certificate validation."
+      }
+    ]
+  },
+  {
+    "id": "risk-008",
+    "category": "risky_change",
+    "description": "Increasing batch size 100x",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 3,
+    "findings": []
+  },
+  {
+    "id": "risk-009",
+    "category": "risky_change",
+    "description": "Changing timeout from 30s to 5min",
+    "shouldFind": true,
+    "detected": false,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 3,
+    "findings": []
+  },
+  {
+    "id": "risk-010",
+    "category": "risky_change",
+    "description": "Removing retry logic from payments",
+    "shouldFind": true,
+    "detected": true,
+    "pass": true,
+    "severityMatch": true,
+    "categoryMatch": true,
+    "keywordHits": 1,
+    "keywordTotal": 3,
+    "findings": [
+      {
+        "filePath": "services/payment.py",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "risky_change",
+        "commentText": "Removal of retry logic silently changes behavior. Payment failures that were previously retried (up to 3 attempts) will now fail immediately.",
+        "suggestedFix": "Restore the retry loop with exponential backoff or document why retries are no longer needed."
+      }
+    ]
+  },
+  {
+    "id": "clean-001",
+    "category": "clean",
+    "description": "Simple variable rename",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-002",
+    "category": "clean",
+    "description": "Adding type annotations",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-003",
+    "category": "clean",
+    "description": "Extracting named constant",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-004",
+    "category": "clean",
+    "description": "Adding docstring",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-005",
+    "category": "clean",
+    "description": "Using f-string instead of format()",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-006",
+    "category": "clean",
+    "description": "Proper error handling with specific exception",
+    "shouldFind": false,
+    "detected": true,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": [
+      {
+        "filePath": "services/file.py",
+        "lineNumber": 6,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Catching only FileNotFoundError misses other I/O issues (permission denied, invalid JSON). Consider catching broader exceptions or let them propagate.",
+        "suggestedFix": "except (FileNotFoundError, IOError):\n        return {}\nor better: except FileNotFoundError:\n        return {}\nexcept json.JSONDecodeError:\n        return {}"
+      }
+    ]
+  },
+  {
+    "id": "clean-007",
+    "category": "clean",
+    "description": "List comprehension instead of loop",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-008",
+    "category": "clean",
+    "description": "Early return to reduce nesting",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-009",
+    "category": "clean",
+    "description": "Extracting helper functions",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-010",
+    "category": "clean",
+    "description": "Using destructuring",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-011",
+    "category": "clean",
+    "description": "Adding unit tests",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-012",
+    "category": "clean",
+    "description": "Using optional chaining",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-013",
+    "category": "clean",
+    "description": "Correct HTTP status code 201",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-014",
+    "category": "clean",
+    "description": "Using enum instead of string literals",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-015",
+    "category": "clean",
+    "description": "Using Promise.all for parallel calls",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-016",
+    "category": "clean",
+    "description": "Named constant for boolean flag",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-017",
+    "category": "clean",
+    "description": "Using context manager for DB session",
+    "shouldFind": false,
+    "detected": true,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": [
+      {
+        "filePath": "services/users.py",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "user can be None if user_id doesn't exist; accessing user.name will raise AttributeError"
+      }
+    ]
+  },
+  {
+    "id": "clean-018",
+    "category": "clean",
+    "description": "Adding input validation",
+    "shouldFind": false,
+    "detected": true,
+    "pass": false,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": [
+      {
+        "filePath": "api/register.py",
+        "lineNumber": 4,
+        "severity": "major",
+        "category": "bug",
+        "commentText": "Password validation uses data.get('password', '') which returns empty string if key missing. len('') < 8 is True, so validation always fails when password is absent."
+      }
+    ]
+  },
+  {
+    "id": "clean-019",
+    "category": "clean",
+    "description": "Guard clauses for param validation",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  },
+  {
+    "id": "clean-020",
+    "category": "clean",
+    "description": "Using defer for resource cleanup in Go",
+    "shouldFind": false,
+    "detected": false,
+    "pass": true,
+    "severityMatch": null,
+    "categoryMatch": null,
+    "keywordHits": 0,
+    "keywordTotal": 0,
+    "findings": []
+  }
+]
